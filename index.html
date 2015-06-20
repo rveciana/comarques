@@ -5,7 +5,7 @@
   position:absolute;
   width: 130px;
   top: 50px;
-  left: 600px;
+  left: 570px;
   border-radius: 25px;
   padding: 20px;
   border: 2px solid #aca;
@@ -26,7 +26,9 @@ button {
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   border-radius: 5px;
   padding: 5px;
-  margin: 3px;
+  margin-top: 3px;
+  margin-left: auto;
+  margin-right: auto;
 }
 </style>
 <body>
@@ -61,10 +63,10 @@ var results = svg.append("g")
   .attr("transform", "translate(140,390)");
 
 results.append("text")
-  .attr("dy", "-0.1em")
-  .attr("dx", ".35em")
+  .attr("dy", "-0.25em")
+  .attr("dx", ".0em")
   .style("font-family","'Helvetica Neue', Helvetica, Arial, sans-serif")
-  .text("Puntuació");
+  .text("Progrés");
 
 
 results.append("rect")
@@ -79,14 +81,14 @@ results.append("rect")
   .attr("width",0)
   .attr("height",20)
   .attr("x",0)
-  .style("fill", "#f00");
+  .style("fill", "#f44");
 
 results.append("rect")
   .attr("class","positiveAnswers")
   .attr("width",0)
   .attr("height",20)
   .attr("x",0)
-  .style("fill", "#0f0");
+  .style("fill", "#4f4");
 
 d3.json("comarques.topo.json", function(error, comarques) {
 
@@ -137,7 +139,52 @@ var checkResponse = function(){
     drawOptions();
     answer = -1;
     loop();
+  } else {
+    svg.append('text')
+    .style("font-family","'Helvetica Neue', Helvetica, Arial, sans-serif")
+    .style("font-size","30px")
+    .style("font-weight", "bold")
+    .attr("y", 225)
+    .attr("x",80)
+    .text("Has acabat!")
+    .style("opacity",0)
+    .transition()
+    .duration(2000)
+    .style("opacity",1);
+
+    svg.append('text')
+    .style("font-family","'Helvetica Neue', Helvetica, Arial, sans-serif")
+    .style("font-size","30px")
+    .style("font-weight", "bold")
+    .style("fill", "#4f4")
+    .style("stroke", "#000")
+    .attr("y", 255)
+    .attr("x",80)
+    .text(function(){ return "Respostes correctes: "+positive_answers;})
+    .style("opacity",0)
+    .transition()
+    .duration(2000)
+    .delay(2000)
+    .style("opacity",1);
+
+    svg.append('text')
+    .style("font-family","'Helvetica Neue', Helvetica, Arial, sans-serif")
+    .style("font-size","30px")
+    .style("font-weight", "bold")
+    .style("fill", "#f44")
+    .style("stroke", "#000")
+    .attr("y", 285)
+    .attr("x",80)
+    .text(function(){ return "Respostes equivocades: "+negative_answers;})
+    .style("opacity",0)
+    .transition()
+    .duration(2000)
+    .delay(4000)
+    .style("opacity",1);
   }
+
+
+
 };
 var loop = function(){
   if (answer == -1)
