@@ -1,33 +1,38 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <style>
+#answers{
+  position:absolute;
+  width: 130px;
+  top: 50px;
+  left: 600px;
+  border-radius: 25px;
+  padding: 20px;
+  border: 2px solid #aca;
 
-.land {
-  fill: #222;
-}
-
-.county-boundary {
-  fill: none;
-  stroke: #fff;
-  stroke-width: .5px;
-}
-
-.state-boundary {
-  fill: none;
-  stroke: #fff;
-}
-
-.border {
-  stroke: #000;
-  fill: none;
+  text-align: center;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 
 }
 
+button {
+  width: 130px;
+  padding:5px;
+  background-color: #aca;
+  border: 1px solid #666;
+  color:#000;
+  text-align: center;
+  text-decoration:none;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  border-radius: 5px;
+  padding: 5px;
+  margin: 3px;
+}
 </style>
 <body>
 <div id="map"/>
-<div id="answers"/>
 <div id="results"/>
+<div id="answers">Tria una resposta:</div>
 
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script src="http://d3js.org/topojson.v1.min.js"></script>
@@ -53,7 +58,7 @@ var svg = d3.select("#map").append("svg")
 
 var results = svg.append("g")
   .attr("id", "results")
-  .attr("transform", "translate(130,390)");
+  .attr("transform", "translate(140,390)");
 
 results.append("text")
   .attr("dy", "-0.1em")
@@ -113,8 +118,6 @@ var checkResponse = function(){
   } else {
     negative_answers++;
   }
-
-  console.info("result " + positive_answers + ' ' + negative_answers + ' '+ pending_answers);
 
 
   svg.select(".positiveAnswers")
