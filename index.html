@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.land {
+  fill: #222;
+}
+
+.county-boundary {
+  fill: none;
+  stroke: #fff;
+  stroke-width: .5px;
+}
+
+.state-boundary {
+  fill: none;
+  stroke: #fff;
+}
+
+.border {
+  stroke: #000;
+  fill: none;
+
+}
+
+</style>
+<body>
+<div id="map"/>
+<div id="answers"/>
+<div id="results"/>
+
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://d3js.org/topojson.v1.min.js"></script>
+<script>
+
+var width = 580,
+    height = 450;
+
+
+var projection = d3.geo.conicConformal()
+    .center([3.6,41.5])
+    .scale(12000);
+
+
+
+var path = d3.geo.path()
+    .projection(projection);
+
+
+var svg = d3.select("#map").append("svg")
+.attr("width", width)
+.attr("height", height);
+
+var results = svg.append("g")
+  .attr("id", "results")
+  .attr("transform", "translate(130,390)");
+
+results.append("text")
+  .attr("dy", "-0.1em")
+  .attr("dx", ".35em")
+  .style("font-family","'Helvetica Neue', Helvetica, Arial, sans-serif")
+  .text("Puntuació");
+
+
+results.append("rect")
+  .attr("class","pendingAnswers")
+  .attr("width",300)
+  .attr("height",20)
+  .attr("x",0)
+  .style("fill", "#888");
+
+results.append("rect")
+  .attr("class","negativeAnswers")
+  .attr("width",0)
+  .attr("height",20)
+  .attr("x",0)
+  .style("fill", "#f00");
+
+results.append("rect")
+  .attr("class","positiveAnswers")
+  .attr("width",0)
+  .attr("height",20)
+  .attr("x",0)
+  .style("fill", "#0f0");
+
+d3.json("comarques.topo.json", function(error, comarques) {
+
+  var land = topojson.feature(comarques, comarques.objects.comarques);
+  var capitals = topojson.feature(comarques, comarques.objects.capitals);
+
+    svg.selectAll("path")
+      .data(land.features)
+      .enter()
+      .append("path")
+      .attr("d", path)
+      .style("stroke","#555")
+      .style("stroke-width",".5px")
+      .style("fill", "#cdc");
+
+var ids = d3.range(1,42);
+var remaining_ids = ids.slice();
+var positive_answers = 0;
+var negative_answers = 0;
+var pending_answers = 41;
+
+var answer = -1;
+var id_question, options;
+
+var checkResponse = function(){
+  pending_answers--;
+  if (answer == id_question){
+    positive_answers++;
+  } else {
+    negative_answers++;
+  }
+
+  console.info("result " + positive_answers + ' ' + negative_answers + ' '+ pending_answers);
+
+
+  svg.select(".positiveAnswers")
+    .transition()
+    .duration(2000)
+    .attr("x", 0)
+    .attr("width",function(){return 300.0*(positive_answers/41);});
+
+    svg.select(".negativeAnswers")
+      .transition()
+      .duration(2000)
+      .attr("x", function(){return positive_answers * 300/41;})
+      .attr("width",function(){return 300.0*(negative_answers/41);});
+
+
+  if (remaining_ids.length > 0){
+    drawOptions();
+    answer = -1;
+    loop();
+  }
+};
+var loop = function(){
+  if (answer == -1)
+    setTimeout(loop, 100);
+  else
+  checkResponse();
+  };
+
+var drawOptions = function(){
+  id_question = remaining_ids[Math.floor(Math.random() * remaining_ids.length)];
+  remaining_ids.splice(remaining_ids.indexOf(id_question),1);
+
+  options = [];
+  while (options.length < 3) {
+    id = Math.round(Math.random()*(ids.length-1));
+    if(options.indexOf(id) == -1 && id != id_question)
+    options.push(id);
+  }
+  options.push(id_question);
+  options
+        .sort(function(a,b){
+          return d3.ascending(land.features[a].properties.name ,land.features[b].properties.name);
+        });
+
+
+
+  var selection = d3.select("#answers")
+    .selectAll(".answer")
+    .data(options, function(d){return d;});
+
+  selection
+    .enter()
+    .append("button")
+    .attr("class","answer")
+    .text(function(d){return land.features[d].properties.name;})
+    .on("click", function(d){answer = d;});
+
+  selection
+    .exit()
+    .remove();
+
+  var land_feature = land.features[id_question]
+  var capitals_feature = capitals.features.filter(
+    function(d){
+      if (d.properties.id_comarca == parseInt(land_feature.properties.comarca)) return d;
+    });
+
+
+  var selectionLand = svg.selectAll(".selectedPath")
+    .data([land_feature], function(d){return d.properties.comarca;});
+
+    selectionLand
+    .enter()
+    .append("path")
+    .attr("d", path)
+    .attr("class", "selectedPath")
+    .style("stroke-width",".5px")
+    .style("stroke","#555")
+    .style("fill", "#ffa000")
+    .style("opacity", 0)
+    .transition()
+    .duration(2000)
+    .style("opacity", 1)
+    ;
+
+    selectionLand
+    .exit()
+    .transition()
+    .duration(2000)
+    .style("opacity", 0)
+    .remove();
+
+
+  var selectionCircle = svg.selectAll(".capitalLocation")
+      .data(capitals_feature, function(d){return d.properties.id_comarca;});
+
+  selectionCircle
+      .enter()
+      .append("circle")
+      .attr("class", "capitalLocation")
+      .attr("r", 2)
+      .attr("transform",function(d){return"translate("+projection(d.geometry.coordinates)+")";})
+      .style("fill", "black")
+      .style("opacity", 0)
+      .transition()
+      .duration(2000)
+      .style("opacity", 1);
+
+    selectionCircle
+      .exit()
+      .transition()
+      .duration(2000)
+      .style("opacity", 0)
+      .remove();
+
+    var selectionText = svg.selectAll(".capitalName")
+      .data(capitals_feature, function(d){return d.properties.id_comarca;});
+
+    selectionText
+      .enter()
+      .append("text")
+      .attr("class","capitalName")
+      .attr("transform", function(d) { return "translate(" + projection(d.geometry.coordinates) + ")"; })
+      .attr("dy", ".35em")
+      .attr("dx", ".35em")
+      .style("font-family","'Helvetica Neue', Helvetica, Arial, sans-serif")
+      .text(function(d) {return d.properties.name;});
+
+    selectionText
+      .exit()
+      .transition()
+      .duration(2000)
+      .style("opacity", 0)
+      .remove();
+
+};
+
+  drawOptions();
+  loop();
+
+});
+</script>
