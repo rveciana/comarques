@@ -106,9 +106,9 @@ d3.json("comarques.topo.json", function(error, comarques) {
 
   var ids = d3.range(1,42);
   var remaining_ids = ids.slice();
+
   var positive_answers = 0;
   var negative_answers = 0;
-
 
   var checkAnswer = function(correct_answer, selected_answer){
       if (correct_answer == selected_answer){
@@ -149,6 +149,14 @@ d3.json("comarques.topo.json", function(error, comarques) {
           .transition()
           .duration(1000)
           .remove();
+
+        d3.selectAll("#answers")
+          .style('opacity',1)
+          .transition()
+          .duration(1000)
+          .style('opacity',0)
+          .remove();
+
         //Draw the results
         svg.append('text')
         .style("font-family","'Helvetica Neue', Helvetica, Arial, sans-serif")
