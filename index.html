@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<meta charset="utf-8"><head>
-  <title>Endevina els comarques</title>
+<meta charset="utf-8">
+<head>
+<title>Endevina els comarques</title>
 <style>
 #answers{
   position:absolute;
@@ -38,13 +39,10 @@ button {
 <body>
 <h1>Endevina la comarca</h1>
 <div id="map"/>
-<div id="results"/>
 <div id="answers">Tria una resposta:</div>
-
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script src="http://d3js.org/topojson.v1.min.js"></script>
 <script>
-
 var width = 580,
     height = 450;
 
@@ -53,11 +51,8 @@ var projection = d3.geo.conicConformal()
     .center([3.6,41.5])
     .scale(12000);
 
-
-
 var path = d3.geo.path()
     .projection(projection);
-
 
 var svg = d3.select("#map").append("svg")
 .attr("width", width)
@@ -96,228 +91,227 @@ results.append("rect")
   .style("fill", "#4f4");
 
 d3.json("comarques.topo.json", function(error, comarques) {
-
   var land = topojson.feature(comarques, comarques.objects.comarques);
   var capitals = topojson.feature(comarques, comarques.objects.capitals);
 
-    svg.selectAll("path")
-      .data(land.features)
-      .enter()
-      .append("path")
-      .attr("d", path)
-      .style("stroke","#555")
-      .style("stroke-width",".5px")
-      .style("fill", "#cdc");
-
-var ids = d3.range(1,42);
-var remaining_ids = ids.slice();
-var positive_answers = 0;
-var negative_answers = 0;
-var pending_answers = 41;
-
-var answer = -1;
-var id_question, options;
-
-var checkResponse = function(){
-  pending_answers--;
-  if (answer == id_question){
-    positive_answers++;
-    var selectionLand = svg.select(".selectedPath")
-    .style("fill","#4f4");
-
-  } else {
-    negative_answers++;
-    var selectionLand = svg.select(".selectedPath")
-    .style("fill","#f44");
-  }
-
-
-  svg.select(".positiveAnswers")
-    .transition()
-    .duration(2000)
-    .attr("x", 0)
-    .attr("width",function(){return 300.0*(positive_answers/41);});
-
-    svg.select(".negativeAnswers")
-      .transition()
-      .duration(2000)
-      .attr("x", function(){return positive_answers * 300/41;})
-      .attr("width",function(){return 300.0*(negative_answers/41);});
-
-
-  if (remaining_ids.length > 0){
-    drawOptions();
-    answer = -1;
-    loop();
-  } else {
-    svg.append('text')
-    .style("font-family","'Helvetica Neue', Helvetica, Arial, sans-serif")
-    .style("font-size","30px")
-    .style("font-weight", "bold")
-    .attr("y", 225)
-    .attr("x",80)
-    .text("Has acabat!")
-    .style("opacity",0)
-    .transition()
-    .duration(2000)
-    .style("opacity",1);
-
-    svg.append('text')
-    .style("font-family","'Helvetica Neue', Helvetica, Arial, sans-serif")
-    .style("font-size","30px")
-    .style("font-weight", "bold")
-    .style("fill", "#4f4")
-    .style("stroke", "#000")
-    .attr("y", 255)
-    .attr("x",80)
-    .text(function(){ return "Respostes correctes: "+positive_answers;})
-    .style("opacity",0)
-    .transition()
-    .duration(2000)
-    .delay(2000)
-    .style("opacity",1);
-
-    svg.append('text')
-    .style("font-family","'Helvetica Neue', Helvetica, Arial, sans-serif")
-    .style("font-size","30px")
-    .style("font-weight", "bold")
-    .style("fill", "#f44")
-    .style("stroke", "#000")
-    .attr("y", 285)
-    .attr("x",80)
-    .text(function(){ return "Respostes equivocades: "+negative_answers;})
-    .style("opacity",0)
-    .transition()
-    .duration(2000)
-    .delay(4000)
-    .style("opacity",1);
-  }
-
-
-
-};
-var loop = function(){
-  if (answer == -1)
-    setTimeout(loop, 100);
-  else
-  checkResponse();
-  };
-
-var drawOptions = function(){
-  id_question = remaining_ids[Math.floor(Math.random() * remaining_ids.length)];
-  remaining_ids.splice(remaining_ids.indexOf(id_question),1);
-
-  options = [];
-  while (options.length < 3) {
-    id = Math.round(Math.random()*(ids.length-1));
-    if(options.indexOf(id) == -1 && id != id_question)
-    options.push(id);
-  }
-  options.push(id_question);
-  options
-        .sort(function(a,b){
-          return d3.ascending(land.features[a].properties.name ,land.features[b].properties.name);
-        });
-
-
-
-  var selection = d3.select("#answers")
-    .selectAll(".answer")
-    .data(options, function(d){return d;});
-
-  selection
-    .enter()
-    .append("button")
-    .attr("class","answer")
-    .text(function(d){return land.features[d].properties.name;})
-    .on("click", function(d){answer = d;});
-
-  selection
-    .exit()
-    .remove();
-
-  var land_feature = land.features[id_question]
-  var capitals_feature = capitals.features.filter(
-    function(d){
-      if (d.properties.id_comarca == parseInt(land_feature.properties.comarca)) return d;
-    });
-
-
-  var selectionLand = svg.selectAll(".selectedPath")
-    .data([land_feature], function(d){return d.properties.comarca;});
-
-    selectionLand
+  svg.selectAll("path")
+    .data(land.features)
     .enter()
     .append("path")
     .attr("d", path)
-    .attr("class", "selectedPath")
-    .style("stroke-width",".5px")
     .style("stroke","#555")
-    .style("fill", "#ffa000")
-    .style("opacity", 0)
-    .transition()
-    .duration(1000)
-    .style("opacity", 1)
-    ;
-
-    selectionLand
-    .exit()
-    .transition()
-    .duration(2000)
-    .style("opacity", 0)
-    .remove();
+    .style("stroke-width",".5px")
+    .style("fill", "#cdc");
 
 
-  var selectionCircle = svg.selectAll(".capitalLocation")
-      .data(capitals_feature, function(d){return d.properties.id_comarca;});
+  var ids = d3.range(1,42);
+  var remaining_ids = ids.slice();
+  var positive_answers = 0;
+  var negative_answers = 0;
 
-  selectionCircle
+
+  var checkAnswer = function(correct_answer, selected_answer){
+      if (correct_answer == selected_answer){
+        positive_answers++;
+        var selectionLand = svg.select(".selectedPath")
+        .style("fill","#4f4");
+      } else {
+        negative_answers++;
+        var selectionLand = svg.select(".selectedPath")
+        .style("fill","#f44");
+      }
+
+      svg.select(".positiveAnswers")
+        .transition()
+        .duration(2000)
+        .attr("x", 0)
+        .attr("width",function(){return 300.0*(positive_answers/41);});
+
+      svg.select(".negativeAnswers")
+        .transition()
+        .duration(2000)
+        .attr("x", function(){return positive_answers * 300/41;})
+        .attr("width",function(){return 300.0*(negative_answers/41);});
+
+      if (remaining_ids.length > 0){
+        //Draw the next question
+        drawOptions();
+      } else {
+        svg.selectAll(".selectedPath")
+          .transition()
+          .duration(1000)
+          .remove();
+        svg.selectAll(".capitalLocation")
+          .transition()
+          .duration(1000)
+          .remove();
+        svg.selectAll(".capitalName")
+          .transition()
+          .duration(1000)
+          .remove();
+        //Draw the results
+        svg.append('text')
+        .style("font-family","'Helvetica Neue', Helvetica, Arial, sans-serif")
+        .style("font-size","30px")
+        .style("font-weight", "bold")
+        .attr("y", 225)
+        .attr("x",80)
+        .text("Has acabat!")
+        .style("opacity",0)
+        .transition()
+        .duration(2000)
+        .style("opacity",1);
+
+        svg.append('text')
+        .style("font-family","'Helvetica Neue', Helvetica, Arial, sans-serif")
+        .style("font-size","30px")
+        .style("font-weight", "bold")
+        .style("fill", "#4f4")
+        .style("stroke", "#000")
+        .attr("y", 255)
+        .attr("x",80)
+        .text(function(){ return "Respostes correctes: "+positive_answers;})
+        .style("opacity",0)
+        .transition()
+        .duration(2000)
+        .delay(2000)
+        .style("opacity",1);
+
+        svg.append('text')
+        .style("font-family","'Helvetica Neue', Helvetica, Arial, sans-serif")
+        .style("font-size","30px")
+        .style("font-weight", "bold")
+        .style("fill", "#f44")
+        .style("stroke", "#000")
+        .attr("y", 285)
+        .attr("x",80)
+        .text(function(){ return "Respostes equivocades: "+negative_answers;})
+        .style("opacity",0)
+        .transition()
+        .duration(2000)
+        .delay(4000)
+        .style("opacity",1);
+      }
+  };
+
+  var drawOptions = function(){
+    var id_question = remaining_ids[Math.floor(Math.random() * remaining_ids.length)];
+    remaining_ids.splice(remaining_ids.indexOf(id_question),1);
+
+    options = [];
+    while (options.length < 3) {
+      id = Math.round(Math.random()*(ids.length-1));
+      if(options.indexOf(id) == -1 && id != id_question)
+      options.push(id);
+    }
+    options.push(id_question);
+    options
+          .sort(function(a,b){
+            return d3.ascending(land.features[a].properties.name ,land.features[b].properties.name);
+          });
+
+
+    //Drawing the answer buttons
+    var selection = d3.select("#answers")
+      .selectAll(".answer")
+      .data(options, function(d){return d;});
+
+    selection
       .enter()
-      .append("circle")
-      .attr("class", "capitalLocation")
-      .attr("r", 2)
-      .attr("transform",function(d){return"translate("+projection(d.geometry.coordinates)+")";})
-      .style("fill", "black")
-      .style("opacity", 0)
-      .transition()
-      .duration(1000)
-      .style("opacity", 1);
+      .append("button")
+      .attr("class","answer")
+      .text(function(d){return land.features[d].properties.name;})
+      .on("click", function(d){checkAnswer(id_question, d);});
 
-    selectionCircle
+    selection
       .exit()
-      .transition()
-      .duration(1000)
-      .style("opacity", 0)
       .remove();
 
-    var selectionText = svg.selectAll(".capitalName")
-      .data(capitals_feature, function(d){return d.properties.id_comarca;});
+    //Drawing the selected region
+    var land_feature = land.features[id_question]
+    var capitals_feature = capitals.features.filter(
+      function(d){
+        if (d.properties.id_comarca == parseInt(land_feature.properties.comarca)) return d;
+      });
 
-    selectionText
+
+    var selectionLand = svg.selectAll(".selectedPath")
+      .data([land_feature], function(d){return d.properties.comarca;});
+
+      selectionLand
       .enter()
-      .append("text")
-      .attr("class","capitalName")
-      .attr("transform", function(d) { return "translate(" + projection(d.geometry.coordinates) + ")"; })
-      .attr("dy", ".35em")
-      .attr("dx", ".35em")
-      .style("font-family","'Helvetica Neue', Helvetica, Arial, sans-serif")
-      .text(function(d) {return d.properties.name;});
+      .append("path")
+      .attr("d", path)
+      .attr("class", "selectedPath")
+      .style("stroke-width",".5px")
+      .style("stroke","#555")
+      .style("fill", "#ffa000")
+      .style("opacity", 0)
+      .transition()
+      .duration(1000)
+      .style("opacity", 1)
+      ;
 
-    selectionText
+      selectionLand
       .exit()
       .transition()
       .duration(2000)
       .style("opacity", 0)
       .remove();
 
-};
+      var selectionCircle = svg.selectAll(".capitalLocation")
+          .data(capitals_feature, function(d){return d.properties.id_comarca;});
 
+      selectionCircle
+          .enter()
+          .append("circle")
+          .attr("class", "capitalLocation")
+          .attr("r", 2)
+          .attr("transform",function(d){return"translate("+projection(d.geometry.coordinates)+")";})
+          .style("fill", "black")
+          .style("opacity", 0)
+          .transition()
+          .duration(1000)
+          .style("opacity", 1);
+
+        selectionCircle
+          .exit()
+          .transition()
+          .duration(1000)
+          .style("opacity", 0)
+          .remove();
+
+      var selectionText = svg.selectAll(".capitalName")
+        .data(capitals_feature, function(d){return d.properties.id_comarca;});
+
+      selectionText
+        .enter()
+        .append("text")
+        .attr("class","capitalName")
+        .attr("transform", function(d) { return "translate(" + projection(d.geometry.coordinates) + ")"; })
+        .attr("dy", ".35em")
+        .attr("dx", ".35em")
+        .style("font-family","'Helvetica Neue', Helvetica, Arial, sans-serif")
+        .text(function(d) {return d.properties.name;})
+        .style("opacity", 0)
+        .transition()
+        .duration(1000)
+        .style("opacity", 1);
+
+      selectionText
+        .exit()
+        .transition()
+        .duration(1000)
+        .style("opacity", 0)
+        .remove();
+
+  };
+
+
+  //Start the test
   drawOptions();
-  loop();
-
 });
 </script>
-
 <script>
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
   (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
