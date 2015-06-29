@@ -123,13 +123,13 @@ d3.json("comarques.topo.json", function(error, comarques) {
 
       svg.select(".positiveAnswers")
         .transition()
-        .duration(2000)
+        .duration(1000)
         .attr("x", 0)
         .attr("width",function(){return 300.0*(positive_answers/41);});
 
       svg.select(".negativeAnswers")
         .transition()
-        .duration(2000)
+        .duration(1000)
         .attr("x", function(){return positive_answers * 300/41;})
         .attr("width",function(){return 300.0*(negative_answers/41);});
 
@@ -257,13 +257,12 @@ d3.json("comarques.topo.json", function(error, comarques) {
       .style("opacity", 0)
       .transition()
       .duration(1000)
-      .style("opacity", 1)
-      ;
+      .style("opacity", 1);
 
       selectionLand
       .exit()
       .transition()
-      .duration(2000)
+      .duration(1000)
       .style("opacity", 0)
       .remove();
 
