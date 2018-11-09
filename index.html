@@ -3,6 +3,9 @@
 <head>
 <title>Endevina els comarques</title>
 <style>
+body {
+font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
 #answers{
   position:absolute;
   width: 130px;
@@ -11,13 +14,7 @@
   border-radius: 25px;
   padding: 20px;
   border: 2px solid #aca;
-
   text-align: center;
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-
-}
-h1 {
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 button {
   width: 130px;
@@ -27,12 +24,16 @@ button {
   color:#000;
   text-align: center;
   text-decoration:none;
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   border-radius: 5px;
   padding: 5px;
   margin-top: 3px;
   margin-left: auto;
   margin-right: auto;
+}
+.result {
+font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;
+font-size:30px;
+font-weight:bold;
 }
 </style>
 </head>
@@ -45,7 +46,6 @@ button {
 <script>
 var width = 580,
     height = 450;
-
 
 var projection = d3.geo.conicConformal()
     .center([3.6,41.5])
@@ -67,7 +67,6 @@ results.append("text")
   .attr("dx", ".0em")
   .style("font-family","'Helvetica Neue', Helvetica, Arial, sans-serif")
   .text("Progrés");
-
 
 results.append("rect")
   .attr("class","pendingAnswers")
@@ -103,7 +102,6 @@ d3.json("comarques.topo.json", function(error, comarques) {
     .style("stroke-width",".5px")
     .style("fill", "#cdc");
 
-
   var ids = d3.range(1,42);
   var remaining_ids = ids.slice();
 
@@ -111,27 +109,35 @@ d3.json("comarques.topo.json", function(error, comarques) {
   var negative_answers = 0;
 
   var checkAnswer = function(correct_answer, selected_answer){
+      var color;
       if (correct_answer == selected_answer){
         positive_answers++;
-        var selectionLand = svg.select(".selectedPath")
-        .style("fill","#4f4");
+        color = "#4f4";
       } else {
         negative_answers++;
-        var selectionLand = svg.select(".selectedPath")
-        .style("fill","#f44");
+        color = "#f44";
       }
+      svg.select(".selectedPath").style("fill",color);
 
+      // remove all the click handlers, color button according to result
+      d3.select("#answers").selectAll(".answer")
+          .style("background-color", function(d){return d===selected_answer ? color : "lightgrey";} )
+        .on("click", null);
+      // changing the style twice on same element does not work
+      // svg.select(".answer"+selected_answer).style("background-color", "orange");
+
+      var answerProgressSize = 300/41;
       svg.select(".positiveAnswers")
         .transition()
         .duration(1000)
         .attr("x", 0)
-        .attr("width",function(){return 300.0*(positive_answers/41);});
+        .attr("width",function(){return answerProgressSize*positive_answers;});
 
       svg.select(".negativeAnswers")
         .transition()
         .duration(1000)
-        .attr("x", function(){return positive_answers * 300/41;})
-        .attr("width",function(){return 300.0*(negative_answers/41);});
+        .attr("x", function(){return answerProgressSize*positive_answers;})
+        .attr("width",function(){return answerProgressSize*negative_answers;});
 
       if (remaining_ids.length > 0){
         //Draw the next question
@@ -158,10 +164,8 @@ d3.json("comarques.topo.json", function(error, comarques) {
           .remove();
 
         //Draw the results
-        svg.append('text')
-        .style("font-family","'Helvetica Neue', Helvetica, Arial, sans-serif")
-        .style("font-size","30px")
-        .style("font-weight", "bold")
+        var result = svg.append('g').attr("class", "result");
+        result.append('text')
         .attr("y", 225)
         .attr("x",80)
         .text("Has acabat!")
@@ -170,10 +174,7 @@ d3.json("comarques.topo.json", function(error, comarques) {
         .duration(2000)
         .style("opacity",1);
 
-        svg.append('text')
-        .style("font-family","'Helvetica Neue', Helvetica, Arial, sans-serif")
-        .style("font-size","30px")
-        .style("font-weight", "bold")
+        result.append('text')
         .style("fill", "#4f4")
         .style("stroke", "#000")
         .attr("y", 255)
@@ -185,10 +186,7 @@ d3.json("comarques.topo.json", function(error, comarques) {
         .delay(2000)
         .style("opacity",1);
 
-        svg.append('text')
-        .style("font-family","'Helvetica Neue', Helvetica, Arial, sans-serif")
-        .style("font-size","30px")
-        .style("font-weight", "bold")
+        result.append('text')
         .style("fill", "#f44")
         .style("stroke", "#000")
         .attr("y", 285)
@@ -202,46 +200,40 @@ d3.json("comarques.topo.json", function(error, comarques) {
       }
   };
 
+  var createAnswers = function(options, id_question) {
+    //Drawing the answer buttons
+    //remove them all so we insert sorted buttons
+    d3.select("#answers").selectAll(".answer").remove();
+    var selection = d3.select("#answers")
+      .selectAll(".answer")
+        .data(options)
+      .enter()
+        .append("button")
+        .attr("class", function(d){return "answer answer"+d;})
+        .text(function(d){return land.features[d].properties.name;})
+      .on("click", function(d){checkAnswer(id_question, d);});
+  };
   var drawOptions = function(){
     var id_question = remaining_ids[Math.floor(Math.random() * remaining_ids.length)];
     remaining_ids.splice(remaining_ids.indexOf(id_question),1);
 
     options = [];
     while (options.length < 3) {
-      id = Math.round(Math.random()*(ids.length-1));
+      id = Math.floor(Math.random()*ids.length);
       if(options.indexOf(id) == -1 && id != id_question)
       options.push(id);
     }
     options.push(id_question);
-    options
-          .sort(function(a,b){
+    options.sort(function(a,b){
             return d3.ascending(land.features[a].properties.name ,land.features[b].properties.name);
           });
-
-
-    //Drawing the answer buttons
-    var selection = d3.select("#answers")
-      .selectAll(".answer")
-      .data(options, function(d){return d;});
-
-    selection
-      .enter()
-      .append("button")
-      .attr("class","answer")
-      .text(function(d){return land.features[d].properties.name;})
-      .on("click", function(d){checkAnswer(id_question, d);});
-
-    selection
-      .exit()
-      .remove();
 
     //Drawing the selected region
     var land_feature = land.features[id_question]
     var capitals_feature = capitals.features.filter(
       function(d){
-        if (d.properties.id_comarca == parseInt(land_feature.properties.comarca)) return d;
+          return (d.properties.id_comarca == parseInt(land_feature.properties.comarca));
       });
-
 
     var selectionLand = svg.selectAll(".selectedPath")
       .data([land_feature], function(d){return d.properties.comarca;});
@@ -257,7 +249,8 @@ d3.json("comarques.topo.json", function(error, comarques) {
       .style("opacity", 0)
       .transition()
       .duration(1000)
-      .style("opacity", 1);
+        .style("opacity", 1)
+      .each("end", function() { createAnswers(options, id_question); });
 
       selectionLand
       .exit()
@@ -311,9 +304,7 @@ d3.json("comarques.topo.json", function(error, comarques) {
         .duration(1000)
         .style("opacity", 0)
         .remove();
-
   };
-
 
   //Start the test
   drawOptions();
